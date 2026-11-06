@@ -155,6 +155,10 @@
   .explain.bad{color:#9b2c2c;background:#ffecec;border-color:var(--red)}
 
   /* Level 3 gapfill */
+  .bank-toggle{display:block;width:100%;margin:6px 0 10px;background:#fff;color:var(--blue-deep);
+    font-weight:800;font-size:14px;padding:11px 16px;border:2px dashed var(--line-strong);
+    border-radius:99px;box-shadow:var(--hard-sm);cursor:pointer;transition:.15s}
+  .bank-toggle:hover{background:#eaf8ff;transform:translateY(-1px)}
   .bank{display:flex;flex-wrap:wrap;gap:9px;margin:6px 0 16px}
   .chip{background:#eaf8ff;border:2px solid var(--line-strong);color:var(--blue-deep);border-radius:99px;
     padding:8px 16px;font-size:14.5px;font-weight:600;transition:.15s;box-shadow:var(--hard-sm)}
@@ -480,7 +484,8 @@
       <span class="leveltag">Level 3 · Medium</span>
       <h2>One Day in Wenchang</h2>
       <p class="task">Click a word in the bank, then click a blank in the story. You will know <b>at once</b> if it is right. There are 2 extra words you do not need.</p>
-      <div class="zh hidden-hint">先点下方词库里的词，再点文中空格填入：<b>填对立即变绿锁定，填错马上会红框抖一下并告诉你不对</b>（词退回词库，可以重挑）。有 2 个词是多余的。6 个空都填对后点 Check 看得分。</div>
+      <div class="zh hidden-hint">先点词库里的词（词库可点上方按钮收起/展开），再点文中空格填入：<b>填对立即变绿锁定，填错马上会红框抖一下并告诉你不对</b>（词退回词库，可以重挑）。有 2 个词是多余的。6 个空都填对后点 Check 看得分。</div>
+      <button class="bank-toggle" id="bankToggle" aria-expanded="true">📖 单词库 Word Bank · 点击收起 ▲</button>
       <div class="bank" id="bank"></div>
       <div class="passage" id="passage"></div>
       <div class="bar"><span id="bar3"></span></div>
@@ -853,7 +858,15 @@ function buildL3(){
     s.innerHTML = '<span class="ph">' + (gi + 1) + '</span>';
     s.onclick = () => {
       if (l3checked || s.dataset.done) return;      // 已填对的空锁定，不能再改
-      if (!selChip){ toast('First click a word below the story.'); return; }
+      if (!selChip){
+        if (bankEl.style.display === 'none'){
+          setBank(true);                            // 词库收着时点空格：自动展开
+          toast('已为你展开单词库，先选一个词 · Word bank opened');
+        } else {
+          toast('First click a word in the bank above the story.');
+        }
+        return;
+      }
       const word = selChip.textContent, chip = selChip;
       selChip = null; chip.classList.remove('sel');
 
@@ -895,6 +908,17 @@ function buildL3(){
   $('#next3').style.display = 'none';
 }
 $('#clear3').onclick = () => { buildL3(); toast('Cleared — try the whole story again.'); };
+
+/* ---- 单词库展开 / 收起 ---- */
+const bankEl = $('#bank'), bankToggleBtn = $('#bankToggle');
+function setBank(open){
+  bankEl.style.display = open ? '' : 'none';
+  bankToggleBtn.textContent = open
+    ? '📖 单词库 Word Bank · 点击收起 ▲'
+    : '📖 单词库 Word Bank · 点击展开 ▼';
+  bankToggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+bankToggleBtn.onclick = () => setBank(bankEl.style.display === 'none');
 $('#check3').onclick = () => {
   l3checked = true;
   let firstTry = 0, pts3 = 0;
