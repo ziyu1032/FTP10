@@ -648,6 +648,7 @@ const hist = [];
 
 function show(n){
   cur = n;
+  stopAllAudio();          /* 换页时停掉正在播的范读 */
   $$('.screen').forEach(s => s.classList.remove('active'));
   const target = $('#s' + n);
   if (target) target.classList.add('active');
@@ -975,13 +976,11 @@ $('#check3').onclick = () => {
 };
 $('#next3').onclick = () => { markDone(3); go(4); };
 $('#readBtn').onclick = () => {
-  if (!('speechSynthesis' in window)){ toast('This browser cannot read aloud.'); return; }
   if (filledCount < 6){
     toast('请先把 6 个空全部填完，再听全文朗读 · Fill all 6 blanks first!');
     return;
   }
-  const txt = $('#passage').innerText.replace(/\n/g, ' ');
-  speak(txt);   /* 走全局 speak()：自带停止按钮 */
+  speak(L3_FULL);   /* 直接播预生成的真人级男声 MP3 */
 };
 
 /* ---------------- Level 4 · Step A: order the sentences ---------------- */
@@ -1191,7 +1190,46 @@ function pickTTSVoice(){
 pickTTSVoice();
 try { speechSynthesis.onvoiceschanged = pickTTSVoice; } catch (e) {}
 
+/* ================= 真人级美音男声范读 =================
+   所有发音文本都用神经网络语音（en-US-Andrew，男声）预先生成 MP3，
+   页面直接播放音频文件，不再依赖各设备自带的机械合成器。
+   找不到对应 MP3 时才退回浏览器合成器（兜底）。 */
+const AUDIO_VER = '1';
+const AUDIO_SRC = {};
+AUDIO_SRC[MODEL] = 'audio/model.mp3?v=' + AUDIO_VER;
+AUDIO_SRC[L3_FULL] = 'audio/level3.mp3?v=' + AUDIO_VER;
+AUDIO_SRC[FRAMES_AUDIO] = 'audio/frames.mp3?v=' + AUDIO_VER;
+/* 预加载，点第一下就不用等 */
+try {
+  Object.keys(AUDIO_SRC).forEach(k => { const a = new Audio(AUDIO_SRC[k]); a.preload = 'auto'; });
+} catch (e) {}
+
+let curAudio = null;
+function stopAllAudio(){
+  if (curAudio){ try{ curAudio.pause(); curAudio.currentTime = 0; }catch(e){} curAudio = null; }
+  try { speechSynthesis.cancel(); } catch (e) {}
+  hideStopAudio();
+}
 function speak(text){
+  const src = AUDIO_SRC[text];
+  if (src){
+    try {
+      if (curAudio){ curAudio.pause(); curAudio.currentTime = 0; }
+      const a = new Audio(src);
+      a.preload = 'auto';
+      curAudio = a;
+      a.onended = hideStopAudio;
+      a.onerror = () => { if (curAudio === a) curAudio = null; ttsSpeak(text); };
+      const p = a.play();
+      if (p && p.then) p.then(() => showStopAudio(a)).catch(() => { ttsSpeak(text); });
+      else showStopAudio(a);
+      return;
+    } catch (e) { /* 落到合成器兜底 */ }
+  }
+  ttsSpeak(text);
+}
+/* 兜底：浏览器自带语音合成（仍是男声优选） */
+function ttsSpeak(text){
   if (!('speechSynthesis' in window)){ toast('This browser cannot read aloud.'); return; }
   const u = new SpeechSynthesisUtterance(text); u.lang = 'en-US'; u.rate = .9;
   if (!TTS_VOICE) pickTTSVoice();
@@ -1209,10 +1247,7 @@ function showStopAudio(u){
   if (u){ u.onend = hideStopAudio; u.onerror = hideStopAudio; }
 }
 function hideStopAudio(){ stopAudioBtn.style.display = 'none'; stopAudioBtn.style.bottom = '24px'; }
-stopAudioBtn.onclick = () => {
-  try { speechSynthesis.cancel(); } catch (e) {}
-  hideStopAudio();
-};
+stopAudioBtn.onclick = () => stopAllAudio();
 
 /* ---- speech recognition ---- */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
