@@ -490,7 +490,7 @@
           <div class="zh" id="tip3">已填 0 / 6</div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button class="btn-ghost" id="readBtn">🔊 Read aloud</button>
+          <button class="btn-ghost" id="readBtn" disabled title="填完 6 个空后可听全文朗读">🔊 Read aloud</button>
           <button class="btn-ghost" id="clear3">Clear</button>
           <button class="btn-main" id="check3" disabled>Check answers</button>
           <button class="btn-main" id="next3" style="display:none">Next Level →</button>
@@ -829,6 +829,7 @@ const GAP_HINT = [
 function l3Progress(){
   $('#bar3').style.width = (filledCount / 6 * 100) + '%';
   $('#check3').disabled = filledCount < 6;
+  $('#readBtn').disabled = filledCount < 6;   /* 填完 6 个空才能听全文朗读 */
 }
 function buildL3(){
   const bank = $('#bank'), pass = $('#passage');
@@ -889,6 +890,7 @@ function buildL3(){
   $('#tip3').textContent = '已填 0 / 6';
   $('#bar3').style.width = '0%';
   $('#check3').disabled = true;
+  $('#readBtn').disabled = true;
   $('#check3').style.display = '';
   $('#next3').style.display = 'none';
 }
@@ -915,9 +917,11 @@ $('#check3').onclick = () => {
 $('#next3').onclick = () => { markDone(3); go(4); };
 $('#readBtn').onclick = () => {
   if (!('speechSynthesis' in window)){ toast('This browser cannot read aloud.'); return; }
-  let txt = '';
-  $$('#passage .gap').forEach(() => {});
-  txt = $('#passage').innerText.replace(/\n/g, ' ');
+  if (filledCount < 6){
+    toast('请先把 6 个空全部填完，再听全文朗读 · Fill all 6 blanks first!');
+    return;
+  }
+  const txt = $('#passage').innerText.replace(/\n/g, ' ');
   speak(txt);   /* 走全局 speak()：自带停止按钮 */
 };
 
@@ -1103,9 +1107,36 @@ function paintRead(){
     ? '点麦克风开始朗读第三步课文，读完再点一次结束。建议 60–90 秒读完。'
     : '点麦克风开始朗读推荐范文，读完再点一次结束。建议 45–65 秒读完。';
 }
+/* ---- 范读音色：自动挑选最自然的美音男声 ----
+   优先级：美音 > Natural/Neural 神经音色 > 男声；
+   Chrome 自带的 Google US English（自然但女声）作兜底，
+   SAPI/Compact 等机械音色大幅降权。 */
+let TTS_VOICE = null;
+const TTS_MALE = /guy|andrew|brian|christopher|david|alex|eric|daniel|james|mark|ryan|davis|matthew|joey/i;
+function pickTTSVoice(){
+  if (!('speechSynthesis' in window)) return;
+  const vs = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang));
+  if (!vs.length) return;
+  const score = v => {
+    let s = 0;
+    const n = v.name || '';
+    if (/en[-_]US/i.test(v.lang)) s += 60; else if (/^en/i.test(v.lang)) s += 20;
+    if (/natural|online|neural|premium|enhanced|siri/i.test(n)) s += 50;
+    if (TTS_MALE.test(n)) s += 30;
+    if (/google us english/i.test(n)) s += 35;
+    if (/compact|espeak|sapi|zira|hazel|susan|microsoft irina/i.test(n)) s -= 60;
+    return s;
+  };
+  TTS_VOICE = vs.sort((a, b) => score(b) - score(a))[0] || null;
+}
+pickTTSVoice();
+try { speechSynthesis.onvoiceschanged = pickTTSVoice; } catch (e) {}
+
 function speak(text){
   if (!('speechSynthesis' in window)){ toast('This browser cannot read aloud.'); return; }
   const u = new SpeechSynthesisUtterance(text); u.lang = 'en-US'; u.rate = .9;
+  if (!TTS_VOICE) pickTTSVoice();
+  if (TTS_VOICE) u.voice = TTS_VOICE;
   speechSynthesis.cancel(); speechSynthesis.speak(u);
   showStopAudio(u);
 }
