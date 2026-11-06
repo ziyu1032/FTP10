@@ -286,6 +286,55 @@
     border:2px solid var(--line-strong);box-shadow:var(--hard);color:var(--ink);font-weight:600;
     padding:11px 20px;border-radius:16px;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:99}
   .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  /* ---------- 停止朗读（全局悬浮按钮） ---------- */
+  .stopaudio{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:98;
+    background:#fff;color:#b32b2b;font-weight:800;font-size:15px;padding:12px 22px;border-radius:99px;
+    border:2px solid #e6a0a0;box-shadow:0 4px 0 rgba(179,43,43,.25), 0 10px 24px rgba(13,59,83,.18);
+    animation:pop .25s ease}
+  .stopaudio:active{transform:translateX(-50%) translateY(2px)}
+
+  /* ---------- 手机端自适应：同一个链接，扫码(手机)与网址(电脑)都好用 ---------- */
+  @media(max-width:640px){
+    .wrap{padding:12px 10px 90px}
+    header.top{padding:12px 12px;border-radius:20px;gap:10px}
+    .brand{gap:9px}
+    .rocket{font-size:26px}
+    h1{font-size:16px}
+    .sub{font-size:11px}
+    .hud{gap:8px;width:100%}
+    .lbtn{padding:9px 11px;font-size:13px}
+    .score{font-size:12px}
+    .card{padding:16px 14px 22px;border-radius:20px}
+    h2{font-size:21px}
+    .leveltag{font-size:11px}
+    .task{font-size:14.5px}
+    .zh{font-size:12.5px}
+    .fact{font-size:13.5px;padding:10px 12px}
+    .passage{font-size:15px;padding:14px 12px 8px;line-height:2.1}
+    .gap{min-width:92px}
+    .item{font-size:14px;padding:11px 12px}
+    .opt{font-size:14px}
+    .scard{font-size:14px;padding:12px}
+    .mode-card{font-size:14.5px;padding:13px 14px}
+    .prompt-box{padding:13px 13px;border-radius:16px}
+    .kw{font-size:12.5px;padding:6px 11px}
+    .mic{width:70px;height:70px;flex:0 0 70px;font-size:29px}
+    .rec-area{gap:10px}
+    .transcript{font-size:14.5px;padding:12px}
+    .fb{padding:15px;border-radius:18px}
+    .fb-score{font-size:40px}
+    .fb-row{grid-template-columns:96px 1fr 44px;gap:7px;font-size:12px}
+    .fb-sug{font-size:13.5px}
+    .btn-main,.btn-ghost{padding:11px 16px;font-size:14px}
+    .btn-back{font-size:13px;padding:9px 14px}
+    .foot{gap:10px}
+    .toast{max-width:88vw;text-align:center;font-size:13.5px}
+    .takeaway{font-size:13.5px}
+    .cert h2{font-size:24px}
+    .sun{width:64px;height:64px;top:18px;right:6vw}
+    .palm{font-size:44px}
+  }
 </style>
 </head>
 <body>
@@ -553,6 +602,7 @@
 
 </div>
 <div class="toast" id="toast"></div>
+<button class="stopaudio" id="stopAudio" style="display:none" title="停止朗读">⏹ 停止朗读 · Stop</button>
 
 <script>
 /* ---------------- shared helpers ---------------- */
@@ -754,15 +804,15 @@ const PASSAGE = [
   {t:' of the white towers and the blue sea. In the afternoon we walk through Dongjiao Coconut Forest, the largest coconut forest in China, and taste Wenchang '},
   {gap:'chicken'},
   {t:', a famous local dish. Today Wenchang is not only a place for launches: a rocket and satellite '},
-  {gap:'industry'},
+  {gap:'ecosystem'},
   {t:' is growing here, and with the help of the Hainan Free Trade '},
   {gap:'Port'},
   {t:', more and more space companies are coming. Before you leave, remember to take a '},
   {gap:'photo'},
   {t:' of the towers at sunset — it is the best picture of this trip!'}
 ];
-const BANK = ['launch site','rocket','chicken','industry','Port','view','photo','museum'];
-const GAP_ANS = ['launch site','view','chicken','industry','Port','photo'];
+const BANK = ['launch site','rocket','chicken','ecosystem','Port','view','photo','museum'];
+const GAP_ANS = ['launch site','view','chicken','ecosystem','Port','photo'];
 let selChip = null, filledCount = 0, l3checked = false;
 let l3BestAwarded = 0;   /* L3 只按最高一次计分，防止反复 Clear 刷分 */
 let l3Mistakes = 0;      /* 本关累计填错次数（第一次没填对，之后才填对） */
@@ -771,7 +821,7 @@ const GAP_HINT = [
   '这里要说「发射场地」，是两个词：launch ___。',
   'a wonderful ___ of the white towers：「景色、视野」，一个名词。',
   '文昌最有名的一道菜 Wenchang ___，只填一个词。',
-  '「火箭和卫星产业」，一个词，以 in- 开头：ind___。',
+  '火箭和卫星共同构成的「产业生态圈」，一个词。',
   '专有名词，首字母大写：Hainan Free Trade ___。',
   'take a ___ of the towers at sunset：「拍张照片」，一个词。'
 ];
@@ -868,8 +918,7 @@ $('#readBtn').onclick = () => {
   let txt = '';
   $$('#passage .gap').forEach(() => {});
   txt = $('#passage').innerText.replace(/\n/g, ' ');
-  const u = new SpeechSynthesisUtterance(txt); u.lang = 'en-US'; u.rate = .92;
-  speechSynthesis.cancel(); speechSynthesis.speak(u);
+  speak(txt);   /* 走全局 speak()：自带停止按钮 */
 };
 
 /* ---------------- Level 4 · Step A: order the sentences ---------------- */
@@ -1010,7 +1059,7 @@ $$('.mode-card').forEach(c => {
     $('#recHint').textContent = speakMode === 'read'
       ? '选好要读的文本，点麦克风开始读，读完再点一次结束（最长 90 秒）。'
       : '点麦克风开始说，说完再点一次结束。建议 5 句以上、40–80 词（最长 90 秒）。';
-    window.scrollTo({top: 400, behavior: 'smooth'});
+    /* 选完直接开始，不再自动跳页 */
   };
 });
 function buildPrompt(){
@@ -1058,7 +1107,19 @@ function speak(text){
   if (!('speechSynthesis' in window)){ toast('This browser cannot read aloud.'); return; }
   const u = new SpeechSynthesisUtterance(text); u.lang = 'en-US'; u.rate = .9;
   speechSynthesis.cancel(); speechSynthesis.speak(u);
+  showStopAudio(u);
 }
+/* ---- 范读停止键：朗读时屏幕底部出现「⏹ 停止朗读」 ---- */
+const stopAudioBtn = $('#stopAudio');
+function showStopAudio(u){
+  stopAudioBtn.style.display = 'block';
+  if (u){ u.onend = hideStopAudio; u.onerror = hideStopAudio; }
+}
+function hideStopAudio(){ stopAudioBtn.style.display = 'none'; }
+stopAudioBtn.onclick = () => {
+  try { speechSynthesis.cancel(); } catch (e) {}
+  hideStopAudio();
+};
 
 /* ---- speech recognition ---- */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
