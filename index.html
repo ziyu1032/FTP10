@@ -987,12 +987,12 @@ $('#readBtn').onclick = () => {
 /* 6 句都可直接用于推荐，学生按语篇顺序排序 */
 /* 6 句全部取自 Level 3 课文（One Day in Wenchang）的事实与词汇，只是换成了推荐语气 */
 const SENTENCES = [
-  {en:'Hi Ling! Have you ever watched a rocket rise into the sky with your own eyes?', zh:'① 问候 + 提问引入'},
-  {en:'I would like to recommend Wenchang International Aerospace City in Hainan, China.', zh:'② 推荐对象 + 位置'},
-  {en:'The best part is watching a launch at Qishui Bay, a free beach only three kilometres from the launch site.', zh:'③ 最大看点：淇水湾看发射（课文原句改写）'},
-  {en:'You can also see a space station model and try VR games at the Space Science Centre.', zh:'④ 还可以做什么：科普中心看模型 + VR'},
-  {en:'In the morning you can climb Tonggu Ling for a view of the white towers and the blue sea, and in the afternoon you can taste Wenchang chicken.', zh:'⑤ 还可以做什么：铜鼓岭看海 + 文昌鸡'},
-  {en:'With the help of the Hainan Free Trade Port, the rocket and satellite ecosystem here is growing fast — do not miss this trip full of stars!', zh:'⑥ 产业理由 + 结尾呼吁'}
+  {en:'Hi Ling! Have you ever watched a rocket rise into the sky with your own eyes?', zh:'问候 + 提问引入'},
+  {en:'I would like to recommend Wenchang International Aerospace City in Hainan, China.', zh:'推荐对象 + 位置'},
+  {en:'The best part is watching a launch at Qishui Bay, a free beach only three kilometres from the launch site.', zh:'最大看点：淇水湾看发射'},
+  {en:'You can also see a space station model and try VR games at the Space Science Centre.', zh:'还可以做什么：科普中心看模型 + VR'},
+  {en:'In the morning you can climb Tonggu Ling for a view of the white towers and the blue sea, and in the afternoon you can taste Wenchang chicken.', zh:'还可以做什么：铜鼓岭看海 + 文昌鸡'},
+  {en:'With the help of the Hainan Free Trade Port, the rocket and satellite ecosystem here is growing fast — do not miss this trip full of stars!', zh:'产业理由 + 结尾呼吁'}
 ];
 const MODEL = SENTENCES.map(s => s.en).join(' ');
 const ORDER_HINT = '推荐顺序（也正是第三步课文的展开顺序）：① 问候 + 提问（Have you ever…?）→ ② 推荐对象 + 位置 → ③ 最大看点：在淇水湾看发射 → ④ 科普中心看空间站模型、玩 VR → ⑤ 铜鼓岭看白塔蓝海 + 东郊椰林吃文昌鸡 → ⑥ 产业理由（自贸港 + 火箭卫星生态圈）+ 结尾呼吁。';
