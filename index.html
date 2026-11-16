@@ -68,7 +68,7 @@
   .fish{position:absolute;bottom:56px;right:14vw;font-size:22px;animation:bob 4.2s ease-in-out infinite}
   .shell{position:absolute;bottom:8px;left:16vw;font-size:20px}
 
-  .wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:20px 18px 70px}
+  .wrap{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:20px 18px 70px}
   header.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;
     background:var(--card);border:2px solid var(--line);border-radius:24px;padding:14px 18px;box-shadow:var(--hard)}
   .brand{display:flex;align-items:center;gap:12px}
@@ -160,7 +160,7 @@
   .bankdock{position:fixed;left:0;right:0;bottom:0;z-index:90;background:#fff;
     border-top:2px solid var(--line-strong);box-shadow:0 -6px 22px rgba(13,59,83,.14);
     padding:10px 16px calc(10px + env(safe-area-inset-bottom));
-    max-width:1080px;margin:0 auto;border-radius:18px 18px 0 0}
+    max-width:1280px;margin:0 auto;border-radius:18px 18px 0 0}
   .dock-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
   .dock-title{font-size:13px;font-weight:700;color:var(--ink-soft)}
   .dock-btn{background:#eaf8ff;border:2px solid var(--line-strong);color:var(--blue-deep);
@@ -308,58 +308,61 @@
     animation:pop .25s ease}
   .stopaudio:active{transform:translateX(-50%) translateY(2px)}
 
-  /* ---------- 电脑端：整体字号放大约 10%，手机端不受影响 ---------- */
+  /* ---------- 电脑/投影端：字号随屏宽自动放大（手机端不受影响） ----------
+     教室后排也要看得清：1280 宽笔记本上说明文字约 20px、课文约 23px；
+     1920 宽投影时自动长到说明 27px、课文 30px。下限已保证窄屏不挤、不溢出。 */
   @media (min-width:641px){
-    h1{font-size:23px}
-    .sub{font-size:13.5px}
-    .lbtn{font-size:14.5px}
-    .btn-back{font-size:15px}
-    .score{font-size:14.5px}
-    .score b{font-size:19px}
-    button{font-size:15.5px}
-    .btn-hint{font-size:14.5px}
-    .leveltag{font-size:13px}
-    h2{font-size:28px}
-    .task{font-size:17px}
-    .zh{font-size:14.5px}
-    .fact{font-size:15.5px}
-    .levels-list li{font-size:15.5px}
-    .levels-list .n{font-size:14px}
-    .col-title{font-size:14px}
-    .item{font-size:16px}
-    .q .qt{font-size:17px}
-    .opt{font-size:16px}
-    .explain{font-size:15px}
-    .dock-title{font-size:14px}
-    .dock-btn{font-size:13.5px}
-    .chip{font-size:16px}
-    .passage{font-size:19px}
-    .gap .ph{font-size:14px}
-    .fb-ok,.fb-no{font-size:16px}
-    .fb-clue{font-size:14.5px}
-    .pcard{font-size:16px}
-    textarea{font-size:16.5px}
-    .count{font-size:14px}
-    .starter{font-size:14px}
-    .model{font-size:16.5px}
-    .scard{font-size:16.5px}
-    .scard .num{font-size:14.5px}
-    .scard .zhs{font-size:13.5px}
-    .rp{font-size:15px}
-    .mode-card{font-size:17px}
-    .prompt-box h4{font-size:14px}
-    .kw{font-size:14.5px}
-    .transcript{font-size:16.5px}
-    .fb-score{font-size:52px}
-    .fb-title{font-size:17.5px}
-    .fb-sub{font-size:14px}
-    .fb-row{font-size:14px}
-    .fb-sug{font-size:16px}
-    .warnbox{font-size:15px}
-    .rank{font-size:23px}
-    .takeaway{font-size:16px}
-    .cert h2{font-size:30px}
-    .stopaudio{font-size:16px}
+    h1{font-size:clamp(24px,1.7vw,31px)}
+    .sub{font-size:clamp(14px,1vw,18px)}
+    .lbtn{font-size:clamp(17px,1.2vw,22px);padding:9px 15px}
+    .btn-back{font-size:clamp(18px,1.25vw,23px)}
+    .score{font-size:clamp(17px,1.18vw,22px)}
+    .score b{font-size:clamp(23px,1.6vw,29px)}
+    button{font-size:clamp(17.5px,1.2vw,22px)}
+    .btn-hint{font-size:clamp(17px,1.18vw,22px);padding:9px 15px}
+    .leveltag{font-size:clamp(15.5px,1.1vw,20px)}
+    h2{font-size:clamp(33px,2.45vw,45px)}
+    .task{font-size:clamp(20px,1.45vw,27px)}
+    .zh{font-size:clamp(17px,1.18vw,22px)}
+    .fact{font-size:clamp(18.5px,1.28vw,24px);padding:13px 16px}
+    .levels-list li{font-size:clamp(18.5px,1.28vw,24px);padding:13px 16px}
+    .levels-list .n{font-size:clamp(17px,1.18vw,22px);width:32px;height:32px;flex:0 0 32px}
+    .col-title{font-size:clamp(17px,1.18vw,22px)}
+    .item{font-size:clamp(19.5px,1.33vw,25px);padding:14px 16px}
+    .q .qt{font-size:clamp(21px,1.45vw,27px)}
+    .opt{font-size:clamp(19.5px,1.33vw,25px);padding:13px 16px}
+    .explain{font-size:clamp(17.5px,1.22vw,23px);padding:11px 14px}
+    .dock-title{font-size:clamp(17px,1.18vw,22px)}
+    .dock-btn{font-size:clamp(15.5px,1.1vw,20px)}
+    .chip{font-size:clamp(19px,1.33vw,25px);padding:9px 17px}
+    .passage{font-size:clamp(22.5px,1.62vw,30px);line-height:2.05}
+    .gap{min-width:170px}
+    .gap .ph{font-size:clamp(16px,1.12vw,21px)}
+    .fb-ok,.fb-no{font-size:clamp(19px,1.3vw,24px)}
+    .fb-clue{font-size:clamp(17px,1.18vw,22px)}
+    .pcard{font-size:clamp(19.5px,1.33vw,25px);padding:14px 16px}
+    textarea{font-size:clamp(19.5px,1.33vw,25px)}
+    .count,.starter{font-size:clamp(17px,1.18vw,22px)}
+    .model{font-size:clamp(19.5px,1.33vw,25px)}
+    .scard{font-size:clamp(20px,1.35vw,25px);padding:15px 17px}
+    .scard .num{font-size:clamp(17px,1.18vw,22px);width:33px;height:33px;flex:0 0 33px}
+    .scard .zhs{font-size:clamp(16px,1.12vw,21px)}
+    .rp{font-size:clamp(17.5px,1.2vw,22px)}
+    .mode-card{font-size:clamp(21px,1.45vw,27px);padding:17px 18px}
+    .prompt-box h4{font-size:clamp(16.5px,1.15vw,21px)}
+    .kw{font-size:clamp(17px,1.18vw,22px)}
+    .transcript{font-size:clamp(19.5px,1.33vw,25px)}
+    .fb-score{font-size:clamp(60px,4vw,76px)}
+    .fb-score small{font-size:clamp(17px,1.18vw,22px)}
+    .fb-title{font-size:clamp(21px,1.45vw,27px)}
+    .fb-sub{font-size:clamp(17px,1.18vw,22px)}
+    .fb-row{font-size:clamp(17px,1.18vw,22px);grid-template-columns:150px 1fr 60px}
+    .fb-sug{font-size:clamp(19.5px,1.33vw,25px)}
+    .warnbox{font-size:clamp(18px,1.25vw,23px)}
+    .rank{font-size:clamp(27px,1.9vw,35px)}
+    .takeaway{font-size:clamp(19.5px,1.33vw,25px)}
+    .cert h2{font-size:clamp(38px,2.6vw,48px)}
+    .stopaudio{font-size:clamp(18px,1.25vw,23px)}
   }
 
   /* ---------- 手机端自适应：同一个链接，扫码(手机)与网址(电脑)都好用 ---------- */
