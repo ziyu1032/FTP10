@@ -590,9 +590,8 @@
 
       <!-- ---- Step A: ordering ---- -->
       <p class="task"><b>Step A · Put the sentences in order.</b> All six sentences can be used to recommend Wenchang, but their order is mixed up.
-        Click them one by one to build a smooth recommendation (first click = sentence 1). Click a chosen sentence again to take it back.
-        Every fact you need is in the Level 3 story — open <b>Level 3 reference</b> below if you forget.</p>
-      <div class="zh hidden-hint">第一步：下面 6 句都是可以推荐给朋友的表达，顺序被打乱了。按你认为最自然、最通顺的顺序依次点击（第一次点 = 第 1 句；再点一次可取消）。<b>6 句的内容全部来自第三步的课文</b>，忘了就点下面的「📖 Level 3 reference」看原文。</div>
+        Click them one by one to build a smooth recommendation (first click = sentence 1). You get instant feedback: a card turns <b style="color:#1c7a4d">green</b> when it is in the right place, and <b style="color:#9b2c2c">red</b> when it is not — click a red card to take it back. When all six are green, you are done!</p>
+      <div class="zh hidden-hint">第一步：下面 6 句都是可以推荐给朋友的表达，顺序被打乱了。按你认为最自然、最通顺的顺序依次点击（第一次点 = 第 1 句）。<b>即时反馈</b>：放对位置的卡片马上变<b>绿色</b>并锁定，放错位置的马上变<b>红色</b>——点红色的卡片可以取下来重选。6 句全绿就自动完成！内容全部来自第三步的课文，忘了就点下面的「📖 Level 3 reference」看原文。</div>
       <div class="order-box" id="orderBox"></div>
       <div class="foot" style="margin-top:14px">
         <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
@@ -1092,8 +1091,14 @@ function buildL4(){
     d.onclick = () => {
       if (l4checked) return;
       const pos = l4picked.indexOf(i);
-      if (pos >= 0) l4picked.splice(pos, 1); else l4picked.push(i);
+      if (pos >= 0){
+        if (i === pos) return;        /* 已放对的绿卡锁定，防误触取下 */
+        l4picked.splice(pos, 1);      /* 红卡可取下重新选 */
+      } else {
+        l4picked.push(i);
+      }
       paintL4();
+      maybeCompleteL4();
     };
     box.appendChild(d);
   });
@@ -1113,13 +1118,22 @@ function buildL4(){
   checkFinishReady();
 }
 function paintL4(){
+  /* 即时判定：卡片在哪个位置，index 与位置一致就绿，不一致就红 */
   $$('#orderBox .scard').forEach(c => {
     const i = +c.dataset.i, pos = l4picked.indexOf(i);
-    c.classList.toggle('picked', pos >= 0);
+    c.classList.toggle('picked', false);
+    c.classList.toggle('ok', pos >= 0 && i === pos);
+    c.classList.toggle('bad', pos >= 0 && i !== pos);
     c.querySelector('.num').textContent = pos >= 0 ? (pos + 1) : '';
   });
   $('#tip4').textContent = '已排序 ' + l4picked.length + ' / 6';
   $('#check4').disabled = l4picked.length !== 6 || l4checked;
+}
+/* 6 句全部放对时自动结算（复用 Check 按钮的计分与反馈逻辑） */
+function maybeCompleteL4(){
+  if (l4checked || l4picked.length !== 6) return;
+  if (l4picked.some((i, pos) => i !== pos)) return;
+  $('#check4').click();
 }
 $('#ref3Btn').onclick = toggleRef3;
 $('#reset4').onclick = () => { buildL4(); toast('Order cleared — 重新排序'); };
