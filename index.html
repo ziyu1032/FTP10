@@ -590,8 +590,8 @@
 
       <!-- ---- Step A: ordering ---- -->
       <p class="task"><b>Step A · Put the sentences in order.</b> All six sentences can be used to recommend Wenchang, but their order is mixed up.
-        Click them one by one to build a smooth recommendation (first click = sentence 1). You get instant feedback: a card turns <b style="color:#1c7a4d">green</b> when it is in the right place, and <b style="color:#9b2c2c">red</b> when it is not — click a red card to take it back. When all six are green, you are done!</p>
-      <div class="zh hidden-hint">第一步：下面 6 句都是可以推荐给朋友的表达，顺序被打乱了。按你认为最自然、最通顺的顺序依次点击（第一次点 = 第 1 句）。<b>即时反馈</b>：放对位置的卡片马上变<b>绿色</b>并锁定，放错位置的马上变<b>红色</b>——点红色的卡片可以取下来重选。6 句全绿就自动完成！内容全部来自第三步的课文，忘了就点下面的「📖 Level 3 reference」看原文。</div>
+        Click them one by one to build a smooth recommendation (first click = sentence 1). You get instant feedback: a card turns <b style="color:#1c7a4d">green</b> when it is in the right place, and <b style="color:#9b2c2c">red</b> when it is not — click a red card to take it back. When all six are green you are done, and you can click <b>📖 Show the full paragraph</b> to read the whole recommendation.</p>
+      <div class="zh hidden-hint">第一步：下面 6 句都是可以推荐给朋友的表达，顺序被打乱了。按你认为最自然、最通顺的顺序依次点击（第一次点 = 第 1 句）。<b>即时反馈</b>：放对位置的卡片马上变<b>绿色</b>并锁定，放错位置的马上变<b>红色</b>——点红色的卡片可以取下来重选。6 句全绿就完成并自动+60 分，再点「📖 Show the full paragraph」就能看到整段排好的范文。内容全部来自第三步的课文，忘了就点下面的「📖 Level 3 reference」看原文。</div>
       <div class="order-box" id="orderBox"></div>
       <div class="foot" style="margin-top:14px">
         <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
@@ -600,10 +600,11 @@
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
           <button class="btn-ghost" id="reset4">Reset order</button>
-          <button class="btn-main" id="check4" disabled>Check my order</button>
+          <button class="btn-main" id="showModel4" disabled>📖 Show the full paragraph</button>
         </div>
       </div>
       <div class="explain" id="orderFb" style="display:none"></div>
+      <div class="model" id="modelBox" style="display:none"></div>
 
       <div style="margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
         <button class="btn-ghost" id="ref3Btn">📖 Level 3 reference</button>
@@ -1104,6 +1105,8 @@ function buildL4(){
   });
   paintL4();
   $('#orderFb').style.display = 'none'; $('#orderFb').innerHTML = '';
+  $('#modelBox').style.display = 'none'; $('#modelBox').innerHTML = '';
+  $('#showModel4').textContent = '📖 Show the full paragraph';
   $('#ref3Box').style.display = 'none'; $('#ref3Box').innerHTML = '';
   readSource = 'model';
   $('#speakPanel').style.display = 'none';
@@ -1127,36 +1130,49 @@ function paintL4(){
     c.querySelector('.num').textContent = pos >= 0 ? (pos + 1) : '';
   });
   $('#tip4').textContent = '已排序 ' + l4picked.length + ' / 6';
-  $('#check4').disabled = l4picked.length !== 6 || l4checked;
+  $('#showModel4').disabled = !l4checked;
 }
-/* 6 句全部放对时自动结算（复用 Check 按钮的计分与反馈逻辑） */
+/* 6 句全部放对时自动完成结算 */
 function maybeCompleteL4(){
   if (l4checked || l4picked.length !== 6) return;
   if (l4picked.some((i, pos) => i !== pos)) return;
-  $('#check4').click();
+  completeL4();
+}
+/* Step A 完成：6 句全绿 → 直接 +60 分（不用再点按钮判分） */
+function completeL4(){
+  if (l4checked) return;
+  l4checked = true; orderRight = 6;
+  paintL4();
+  if (!l4aAwarded){ addScore(60); l4aAwarded = 60; }
+  const fb = $('#orderFb'); fb.style.display = 'block'; fb.classList.remove('bad');
+  fb.innerHTML = '✓ Perfect order! 语篇顺序完全正确，+60 分。<br><span style="color:var(--muted)">6 句全绿。点下面的「📖 Show the full paragraph」看整段排好的范文。</span>';
+  $('#tip4').innerHTML = '全对 6 / 6，+60 分';
+  checkFinishReady();
+}
+/* 按正确顺序输出整段范文（连成一段 + 逐句对照） */
+function modelHTML(){
+  return '<b>Your recommendation · 整段范文（按正确顺序排好）</b>'
+    + '<div style="margin-top:10px;line-height:1.95">' + SENTENCES.map(s => s.en).join(' ') + '</div>'
+    + '<hr>'
+    + '<b>逐句对照</b>'
+    + '<div style="margin-top:10px">' + SENTENCES.map((s, i) =>
+        '<div style="margin-bottom:10px"><b>' + (i + 1) + '.</b> ' + s.en
+        + '<span style="display:block;color:var(--muted);font-size:.92em;margin-top:3px">' + s.zh + '</span></div>'
+      ).join('') + '</div>'
+    + '<div style="color:var(--muted);margin-top:6px">' + ORDER_HINT + '</div>';
 }
 $('#ref3Btn').onclick = toggleRef3;
 $('#reset4').onclick = () => { buildL4(); toast('Order cleared — 重新排序'); };
-$('#check4').onclick = () => {
-  l4checked = true;
-  orderRight = l4picked.filter((i, pos) => i === pos).length;
-  $$('#orderBox .scard').forEach(c => {
-    const i = +c.dataset.i, pos = l4picked.indexOf(i);
-    c.classList.remove('picked');
-    c.classList.add(pos === i ? 'ok' : 'bad');
-    c.querySelector('.num').textContent = pos + 1;
-  });
-  const ptsA = orderRight * 10; if (ptsA > l4aAwarded){ addScore(ptsA - l4aAwarded); l4aAwarded = ptsA; }
-  const fb = $('#orderFb'); fb.style.display = 'block';
-  fb.classList.toggle('bad', orderRight !== 6);
-  fb.innerHTML = orderRight === 6
-    ? '✓ Perfect order! 语篇顺序完全正确，+60 分。<br><span style="color:var(--muted)">这就是可以直接说给朋友听的推荐范文，Step B 就用它来练口语。</span>'
-    : '你排对了 <b>' + orderRight + ' / 6</b> 句（绿色=位置正确，红色=位置不对）。<br><b>参考顺序：</b><br>'
-      + SENTENCES.map((s, i) => (i + 1) + '. ' + s.en).join('<br>')
-      + '<br><span style="color:var(--muted)">' + ORDER_HINT + '</span>';
-  $('#tip4').innerHTML = '排对 ' + orderRight + ' / 6（点 Reset order 可重排，不重复计分）';
-  $('#check4').disabled = true;
-  checkFinishReady();
+$('#showModel4').onclick = () => {
+  const box = $('#modelBox'), btn = $('#showModel4');
+  if (box.style.display === 'none'){
+    box.innerHTML = modelHTML(); box.style.display = 'block';
+    btn.textContent = '📖 Hide the paragraph';
+    try { if (box.scrollIntoView) box.scrollIntoView({behavior:'smooth', block:'nearest'}); } catch (e) {}
+  } else {
+    box.style.display = 'none';
+    btn.textContent = '📖 Show the full paragraph';
+  }
 };
 
 /* ---------------- Level 4 · Step B: speak it out ---------------- */
