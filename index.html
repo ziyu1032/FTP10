@@ -621,7 +621,7 @@
         <button class="mode-card" data-mode="read">🎧 Option 1 · Read aloud
           <span class="zh">朗读文本二选一：Step A 排好的推荐范文，或第三步的课文（可先点 🔊 听示范）</span></button>
         <button class="mode-card" data-mode="free">🗣 Option 2 · Speak on your own
-          <span class="zh">用提示词 + 句式结构，自己说一段推荐；提示词都取自第三步课文</span></button>
+          <span class="zh">用提示词 + 句式结构，自己说一段推荐；要点全部来自第三步课文</span></button>
       </div>
 
       <div id="speakPanel" style="display:none">
@@ -631,7 +631,7 @@
           <button class="mic" id="micBtn" title="Start / stop speaking">🎤</button>
           <div>
             <div style="font-size:15px;font-weight:600" id="recState">Click the microphone and start speaking</div>
-            <div class="zh" id="recHint">点麦克风开始说，说完再点一次结束（最长 60 秒）。</div>
+            <div class="zh" id="recHint">点麦克风开始说，说完再点一次结束（最长 90 秒）。</div>
           </div>
           <button class="btn-ghost" id="clearSpeech">Clear</button>
           <button class="btn-ghost" id="typeInstead">⌨️ Type instead</button>
@@ -1052,7 +1052,7 @@ const SENTENCES = [
   {en:'With the help of the Hainan Free Trade Port, the rocket and satellite ecosystem here is growing fast — do not miss this trip full of stars!', zh:'产业理由 + 结尾呼吁'}
 ];
 const MODEL = SENTENCES.map(s => s.en).join(' ');
-const ORDER_HINT = '推荐顺序（也正是第三步课文的展开顺序）：① 问候 + 提问（Have you ever…?）→ ② 推荐对象 + 位置 → ③ 最大看点：在淇水湾看发射 → ④ 科普中心看空间站模型、玩 VR → ⑤ 铜鼓岭看白塔蓝海 + 东郊椰林吃文昌鸡 → ⑥ 产业理由（自贸港 + 火箭卫星生态圈）+ 结尾呼吁。';
+const ORDER_HINT = '推荐顺序（也正是第三步课文的展开顺序）：① 问候 + 提问（Have you ever…?）→ ② 推荐对象 + 位置 → ③ 最大看点：在淇水湾看发射 → ④ 科普中心看空间站模型、玩 VR → ⑤ 铜鼓岭看白塔蓝海 + 吃文昌鸡 → ⑥ 产业理由（自贸港 + 火箭卫星生态圈）+ 结尾呼吁。';
 
 /* ---- Level 3 课文参考：第四步可以直接照着第三步的文本做 ---- */
 const L3_FULL = PASSAGE.map(seg => seg.t ? seg.t : seg.gap).join('');
@@ -1177,15 +1177,17 @@ $('#showModel4').onclick = () => {
 
 /* ---------------- Level 4 · Step B: speak it out ---------------- */
 /* 提示词组全部对应 Level 3 课文里的要点与词汇 */
+/* 每个提示词只对应课文里的一个要点，不把两个概念混在同一个词里 */
 const KEY_GROUPS = [
-  {k:['wenchang','hainan','china'], label:'Wenchang / Hainan 位置'},
+  {k:['wenchang','hainan','china'], label:'Wenchang / Hainan 地点'},
   {k:['recommend'], label:'recommend 推荐表达'},
   {k:['launch site','launch pad','spacecraft launch','rocket launch','launch'], label:'launch site 发射场'},
-  {k:['qishui','bay','beach'], label:'Qishui Bay 淇水湾观礼'},
-  {k:['science centre','science center','space science','space station','museum','vr'], label:'Space Science Centre 科普中心'},
+  {k:['qishui','bay','beach'], label:'Qishui Bay 淇水湾看发射'},
+  {k:['science centre','science center','space science','space station','vr'], label:'Space Science Centre 科普中心'},
   {k:['tonggu','mountain','peak','towers','sea'], label:'Tonggu Ling 铜鼓岭看海'},
-  {k:['chicken','coconut','food'], label:'Wenchang chicken / 东郊椰林'},
-  {k:['free trade','port','ecosystem','satellite','industry'], label:'Free Trade Port / 航天生态圈'}
+  {k:['chicken','coconut','dongjiao'], label:'Wenchang chicken 文昌鸡 / Dongjiao Coconut Forest 东郊椰林'},
+  {k:['free trade','port','ftp'], label:'Free Trade Port 自由贸易港'},
+  {k:['ecosystem','satellite','rocket','space companies','industry'], label:'Rocket & satellite ecosystem 航天产业生态圈'}
 ];
 const FRAMES = [
   {k:['have you ever'], label:'Have you ever…?'},
@@ -1246,11 +1248,11 @@ function paintRead(){
   $('#readModel').classList.toggle('on', !isL3);
   $('#readL3').classList.toggle('on', isL3);
   $('#readTip').textContent = isL3
-    ? '现在读的是第三步的课文（约 150 词），目标 60–90 秒；读熟后再切回推荐范文。'
-    : '现在读的是 Step A 排好的推荐范文（约 115 词），目标 45–65 秒，语速约 100–150 词/分。';
+    ? '现在读的是第三步的课文（约 175 词），目标 75–105 秒；读熟后再切回推荐范文。'
+    : '现在读的是 Step A 排好的推荐范文（约 120 词），目标 50–70 秒，语速约 100–145 词/分。';
   $('#recHint').textContent = isL3
-    ? '点麦克风开始朗读第三步课文，读完再点一次结束。建议 60–90 秒读完。'
-    : '点麦克风开始朗读推荐范文，读完再点一次结束。建议 45–65 秒读完。';
+    ? '点麦克风开始朗读第三步课文，读完再点一次结束。建议 75–105 秒读完。'
+    : '点麦克风开始朗读推荐范文，读完再点一次结束。建议 50–70 秒读完。';
 }
 /* ---- 范读音色：自动挑选最自然的美音男声 ----
    优先级：美音 > Natural/Neural 神经音色 > 男声；
