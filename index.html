@@ -248,6 +248,12 @@
   .mode-card:hover{border-color:var(--blue);background:#eaf8ff;transform:translateY(-1px)}
   .mode-card.on{border-color:var(--coral);background:#fff4e8;box-shadow:0 0 0 3px rgba(255,112,67,.22)}
   .mode-card .zh{font-weight:400;margin-top:5px;font-family:"Segoe UI",system-ui,"Microsoft YaHei",sans-serif}
+  /* Step B 门禁：Step A 完成前锁定 */
+  .stepBLock{display:flex;gap:14px;align-items:center;background:#fff8e8;border:2px dashed var(--gold);
+    border-radius:16px;padding:14px 16px;margin-top:14px;color:#7a4a00;line-height:1.6}
+  .stepBLock .lockIcon{font-size:27px;flex:none}
+  .stepBLock b{font-size:15px}
+  #stepBBody.locked{display:none}
   .prompt-box{background:#f2fbff;border:2px dashed var(--line-strong);border-radius:18px;padding:15px 17px;margin-top:14px}
   .prompt-box h4{margin:0 0 8px;font-size:13px;letter-spacing:.6px;color:var(--blue-deep);text-transform:uppercase;font-family:var(--fun)}
   .kws{display:flex;flex-wrap:wrap;gap:7px;margin:6px 0 12px}
@@ -617,6 +623,11 @@
       <p class="task"><b>Step B · Speak it out.</b> Choose one way to practise, then click the microphone and speak in English.
         You will get a score and some advice.</p>
       <div class="zh hidden-hint">第二步是口语练习，二选一：① 朗读一段文本（Step A 排好的推荐范文，<b>或第三步的课文</b>，由你选）；② 看着提示词和句式，自己组织一段推荐（词汇可搬用第三步课文）。说完会给 AI 评分 + 改进建议。</div>
+      <div id="stepBHint" class="stepBLock">
+        <span class="lockIcon">🔒</span>
+        <span><b>Step B is locked — finish Step A first.</b><br><span class="zh">请先完成上面的 Step A：把 6 句话全部排对（6 句全绿）后，Step B 会自动解锁，才能开始朗读或自己说。</span></span>
+      </div>
+      <div id="stepBBody" class="locked">
       <div class="mode-grid">
         <button class="mode-card" data-mode="read">🎧 Option 1 · Read aloud
           <span class="zh">朗读文本二选一：Step A 排好的推荐范文，或第三步的课文（可先点 🔊 听示范）</span></button>
@@ -653,6 +664,7 @@
           <button class="btn-main" id="finish" disabled>Finish the mission →</button>
         </div>
       </div>
+      </div><!-- /stepBBody -->
     </div>
   </section>
 
@@ -1109,6 +1121,9 @@ function buildL4(){
   $('#showModel4').textContent = '📖 Show the full paragraph';
   $('#ref3Box').style.display = 'none'; $('#ref3Box').innerHTML = '';
   readSource = 'model';
+  /* Step B 上锁：Step A 未完成时隐藏口语区、显示锁提示 */
+  $('#stepBBody').classList.add('locked');
+  $('#stepBHint').style.display = 'flex';
   $('#speakPanel').style.display = 'none';
   $$('.mode-card').forEach(c => c.classList.remove('on'));
   speakMode = null; l4bScore = null; awardedB = 0;
@@ -1147,6 +1162,9 @@ function completeL4(){
   const fb = $('#orderFb'); fb.style.display = 'block'; fb.classList.remove('bad');
   fb.innerHTML = '✓ Perfect order! 语篇顺序完全正确，+60 分。<br><span style="color:var(--muted)">6 句全绿。点下面的「📖 Show the full paragraph」看整段排好的范文。</span>';
   $('#tip4').innerHTML = '全对 6 / 6，+60 分';
+  /* Step A 完成 → 解锁 Step B */
+  $('#stepBBody').classList.remove('locked');
+  $('#stepBHint').style.display = 'none';
   checkFinishReady();
 }
 /* 按正确顺序输出整段范文（连成一段 + 逐句对照） */
@@ -1201,6 +1219,7 @@ const FRAMES_AUDIO = 'Have you ever watched a rocket rise into the sky? I would 
 
 $$('.mode-card').forEach(c => {
   c.onclick = () => {
+    if (!l4checked){ toast('请先完成 Step A：把 6 句话全部排对后再开始 Step B'); return; }
     speakMode = c.dataset.mode;
     $$('.mode-card').forEach(x => x.classList.toggle('on', x === c));
     $('#speakPanel').style.display = 'block';
