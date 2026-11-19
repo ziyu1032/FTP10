@@ -253,6 +253,10 @@
     border-radius:16px;padding:14px 16px;margin-top:14px;color:#7a4a00;line-height:1.6}
   .stepBLock .lockIcon{font-size:27px;flex:none}
   .stepBLock b{font-size:15px}
+  .stepBLock.ready{background:#eafaf1;border:2px solid var(--green);color:#1c7a4d;cursor:pointer;
+    box-shadow:0 4px 0 rgba(60,184,120,.25);transition:.15s}
+  .stepBLock.ready:hover{background:#d8f5e6;transform:translateY(-1px)}
+  .stepBLock.ready .lockIcon{font-size:24px}
   #stepBBody.locked{display:none}
   .prompt-box{background:#f2fbff;border:2px dashed var(--line-strong);border-radius:18px;padding:15px 17px;margin-top:14px}
   .prompt-box h4{margin:0 0 8px;font-size:13px;letter-spacing:.6px;color:var(--blue-deep);text-transform:uppercase;font-family:var(--fun)}
@@ -625,7 +629,7 @@
       <div class="zh hidden-hint">第二步是口语练习，二选一：① 朗读一段文本（Step A 排好的推荐范文，<b>或第三步的课文</b>，由你选）；② 看着提示词和句式，自己组织一段推荐（词汇可搬用第三步课文）。说完会给 AI 评分 + 改进建议。</div>
       <div id="stepBHint" class="stepBLock">
         <span class="lockIcon">🔒</span>
-        <span><b>Step B is locked — finish Step A first.</b><br><span class="zh">请先完成上面的 Step A：把 6 句话全部排对（6 句全绿）后，Step B 会自动解锁，才能开始朗读或自己说。</span></span>
+        <span><b>Step B is locked — finish Step A first.</b><br><span class="zh" id="stepBHintZh">请先完成上面的 Step A：把 6 句话全部排对（6 句全绿）后，点这里进入 Step B，开始朗读或自己说。</span></span>
       </div>
       <div id="stepBBody" class="locked">
       <div class="mode-grid">
@@ -1093,6 +1097,7 @@ function readRef(){ return readSource === 'l3' ? L3_FULL : MODEL; }
 let l4picked = [], l4checked = false, orderRight = 0;
 let l4aAwarded = 0;   /* Step A 只按最高一次计分 */
 let speakMode = null, l4bScore = null, awardedB = 0;
+let stepBEntered = false;  /* 是否点过「进入 Step B」按钮 */
 
 function buildL4(){
   const box = $('#orderBox'); box.innerHTML = '';
@@ -1121,9 +1126,15 @@ function buildL4(){
   $('#showModel4').textContent = '📖 Show the full paragraph';
   $('#ref3Box').style.display = 'none'; $('#ref3Box').innerHTML = '';
   readSource = 'model';
-  /* Step B 上锁：Step A 未完成时隐藏口语区、显示锁提示 */
+  /* Step B 上锁：Step A 未完成时隐藏口语区、显示锁提示（不可点） */
+  stepBEntered = false;
   $('#stepBBody').classList.add('locked');
-  $('#stepBHint').style.display = 'flex';
+  const sbh = $('#stepBHint');
+  sbh.style.display = 'flex';
+  sbh.classList.remove('ready');
+  sbh.querySelector('.lockIcon').textContent = '🔒';
+  sbh.querySelector('b').textContent = 'Step B is locked — finish Step A first.';
+  $('#stepBHintZh').textContent = '请先完成上面的 Step A：把 6 句话全部排对（6 句全绿）后，点这里进入 Step B，开始朗读或自己说。';
   $('#speakPanel').style.display = 'none';
   $$('.mode-card').forEach(c => c.classList.remove('on'));
   speakMode = null; l4bScore = null; awardedB = 0;
@@ -1162,11 +1173,25 @@ function completeL4(){
   const fb = $('#orderFb'); fb.style.display = 'block'; fb.classList.remove('bad');
   fb.innerHTML = '✓ Perfect order! 语篇顺序完全正确，+60 分。<br><span style="color:var(--muted)">6 句全绿。点下面的「📖 Show the full paragraph」看整段排好的范文。</span>';
   $('#tip4').innerHTML = '全对 6 / 6，+60 分';
-  /* Step A 完成 → 解锁 Step B */
-  $('#stepBBody').classList.remove('locked');
-  $('#stepBHint').style.display = 'none';
+  /* Step A 完成 → 锁提示变成可点击的「进入 Step B」按钮，但需学生主动点一下才展开 */
+  const sbh = $('#stepBHint');
+  sbh.classList.add('ready');
+  sbh.querySelector('.lockIcon').textContent = '👉';
+  sbh.querySelector('b').textContent = 'Step A done! Click here to enter Step B.';
+  $('#stepBHintZh').textContent = 'Step A 已完成。点这里进入 Step B，选择朗读范文或自己说一段推荐。';
   checkFinishReady();
 }
+/* 点击「进入 Step B」按钮后才展开口语区 */
+function enterStepB(){
+  if (!l4checked || stepBEntered) return;
+  stepBEntered = true;
+  $('#stepBBody').classList.remove('locked');
+  $('#stepBHint').style.display = 'none';
+  try { $('#stepBBody').scrollIntoView({behavior:'smooth', block:'start'}); } catch (e) {}
+}
+$('#stepBHint').onclick = function(){
+  if (l4checked) enterStepB();
+};
 /* 按正确顺序输出整段范文（连成一段 + 逐句对照） */
 function modelHTML(){
   return '<b>Your recommendation · 整段范文（按正确顺序排好）</b>'
@@ -1219,7 +1244,7 @@ const FRAMES_AUDIO = 'Have you ever watched a rocket rise into the sky? I would 
 
 $$('.mode-card').forEach(c => {
   c.onclick = () => {
-    if (!l4checked){ toast('请先完成 Step A：把 6 句话全部排对后再开始 Step B'); return; }
+    if (!stepBEntered){ toast('请先完成 Step A，再点上面的按钮进入 Step B'); return; }
     speakMode = c.dataset.mode;
     $$('.mode-card').forEach(x => x.classList.toggle('on', x === c));
     $('#speakPanel').style.display = 'block';
